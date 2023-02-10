@@ -1,28 +1,64 @@
-/* eslint-disable no-unused-expressions */
+import { useQuery, useMutation, useQueryClient } from 'react-query'
+// import axios from 'axios'
+import { request } from '../utils/axios-utils'
 
-import { useQuery } from 'react-query'
-import axios from 'axios'
-
-const fetchSuperHeroes = async () => {
-    return axios.get('http://localhost:4000/superheroes')
+const fetchSuperHeroes = () => {
+    // return axios.get('http://localhost:4000/superheroes')
+    return request({ url: '/superheroes' })
 }
 
 export const useSuperHeroesData = (onSuccess, onError) => {
     return useQuery('super-heroes', fetchSuperHeroes, {
-        // cacheTime: 5000, -> how long the cache is valid
-        // staleTime: 30000, -> time to refetch data
-        // refetchOnMount: true, // -> refetch data on mount
-        // refetchOnWindowFocus: true, // -> refetch data on window focus
-        // refetchInterval: 5000, // -> refetch data every 5 seconds
-        // refetchIntervalInBackground: true, // -> refetch data in background (when the browser is not focused)
-        // enabled: false, // -> enable/disable the query on component mount (used when you want to fetch with a button click)
-        onSuccess: onSuccess, // handler on success
-        onError: onError, // handler on error
-        // select: (data) => {
-        //     const superheroNames = data.data.map((hero) => {
-        //         hero.name
-        //     })
-        //     return superheroNames
-        // }, // -> select data from response and transform it
+        onSuccess,
+        onError,
+        // select: data => {
+        //   const superHeroNames = data.data.map(hero => hero.name)
+        //   return superHeroNames
+        // }
+    })
+}
+
+const addSuperHero = (hero) => {
+    // return axios.post('http://localhost:4000/superheroes', hero)
+    return request({ url: '/superheroes', method: 'post', data: hero })
+}
+
+export const useAddSuperHeroData = () => {
+    const queryClient = useQueryClient()
+
+    return useMutation(addSuperHero, {
+        // onSuccess: data => {
+        //   /** Query Invalidation Start */
+        //   // queryClient.invalidateQueries('super-heroes')
+        //   /** Query Invalidation End */
+
+        //   /** Handling Mutation Response Start */
+        // queryClient.setQueryData('super-heroes', oldQueryData => {
+        //   return {
+        //     ...oldQueryData,
+        //     data: [...oldQueryData.data, data.data]
+        //   }
+        // })
+        //   /** Handling Mutation Response Start */
+        // },
+        /**Optimistic Update Start */
+        onMutate: async (newHero) => {
+            await queryClient.cancelQueries('super-heroes')
+            const previousHeroData = queryClient.getQueryData('super-heroes')
+            queryClient.setQueryData('super-heroes', (oldQueryData) => {
+                return {
+                    ...oldQueryData,
+                    data: [...oldQueryData.data, { id: oldQueryData?.data?.length + 1, ...newHero }],
+                }
+            })
+            return { previousHeroData }
+        },
+        onError: (_err, _newTodo, context) => {
+            queryClient.setQueryData('super-heroes', context.previousHeroData)
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries('super-heroes')
+        },
+        /**Optimistic Update End */
     })
 }
