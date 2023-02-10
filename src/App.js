@@ -5,6 +5,10 @@ import './App.css'
 import { Home } from './components/Home.page'
 import { RQSuperHeroes } from './components/RQSuperHeroes.page'
 import { SuperHeroes } from './components/SuperHeroes.page'
+import { RQSuperHero } from './components/RQSuperHero.page'
+import { ParallelQueries } from './components/ParallelQueries.page'
+import { DynamicParallelPage } from './components/DynamicQueries.page'
+import { DependentQueriesPage } from './components/DependantQueries.page'
 
 const queryClient = new QueryClient({})
 
@@ -27,6 +31,10 @@ function App() {
                         </ul>
                     </nav>
                     <Routes>
+                        <Route path="/rq-dependant" element={<DependentQueriesPage email="vishwas@example.com" />} />
+                        <Route path="/rq-dynamic" element={<DynamicParallelPage />} />
+                        <Route path="/rq-parallel" element={<ParallelQueries />} />
+                        <Route path="/rq-super-heroes/:heroId" element={<RQSuperHero />} />
                         <Route path="/super-heroes" element={<SuperHeroes />} />
                         <Route path="/rq-super-heroes" element={<RQSuperHeroes />} />
                         <Route path="/" element={<Home />} />
